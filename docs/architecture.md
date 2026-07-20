@@ -2,11 +2,11 @@
 
 ## Overview
 
-dotslashstream is a self-hosted media streaming service with four core services. API Gateway is the single entry point — all other services are network isolated.
+dotslashstream is a self-hosted media streaming service with four core services. API is the single entry point — all other services are network isolated.
 
 ## Design Principles
 
-1. **Single entry point** — Only API Gateway exposes ports to the network
+1. **Single entry point** — Only API exposes ports to the network
 2. **Network isolation** — Workers and search gateway have no internet access
 3. **Service isolation** — Compromised service can't affect others
 4. **Stream first** — Media plays as soon as initial buffer is ready
@@ -25,7 +25,7 @@ graph TB
     
     subgraph "DMZ - Exposed"
         Web[Web App]
-        API[API Gateway<br/>Go]
+        API[API<br/>Go]
     end
     
     subgraph "Internal Network - Isolated"
@@ -61,7 +61,7 @@ graph TB
 
 | Service | Ports | Protocol | Purpose |
 |---------|-------|----------|---------|
-| API Gateway | 8000, 8443 | HTTP/HTTPS | REST API, WebSocket |
+| API | 8000, 8443 | HTTP/HTTPS | REST API, WebSocket |
 | Web App | 3000, 443 | HTTPS | Frontend UI |
 
 ### Isolated Services (Internal)
@@ -245,7 +245,7 @@ graph TB
 sequenceDiagram
     participant C as Client
     participant W as Web App
-    participant A as API Gateway
+    participant A as API
     participant Q as Redis
     participant T as Torrent Worker
     participant S as MinIO
@@ -279,7 +279,7 @@ sequenceDiagram
 sequenceDiagram
     participant C as Client
     participant W as Web App
-    participant A as API Gateway
+    participant A as API
     participant SG as Search Gateway
     participant I as Indexers
     
@@ -298,7 +298,7 @@ sequenceDiagram
 
 ## Service Responsibilities
 
-### API Gateway (Go)
+### API (Go)
 
 - JWT authentication
 - User profiles and preferences

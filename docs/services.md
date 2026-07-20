@@ -2,12 +2,12 @@
 
 ## Overview
 
-Four containerized services. API Gateway is the only externally accessible service.
+Four containerized services. API is the only externally accessible service.
 
 ```mermaid
 graph TB
     subgraph "Exposed"
-        API[API Gateway<br/>Go]
+        API[API<br/>Go]
         Web[Web App<br/>Vue + Vite]
     end
     
@@ -36,7 +36,7 @@ graph TB
 
 ---
 
-## API Gateway
+## API
 
 **Purpose:** Single entry point for all client communication.
 
@@ -58,8 +58,8 @@ graph TB
 
 ```mermaid
 graph TB
-    subgraph "API Gateway"
-        API[API Gateway]
+    subgraph "API"
+        API[API]
     end
     
     subgraph "Allowed Connections"
@@ -282,7 +282,7 @@ graph TB
     
     subgraph "Allowed Connections"
         A1[Redis: Cache results]
-        A2[API Gateway: Receive queries]
+        A2[API: Receive queries]
         A3[Indexers: Outbound HTTP]
     end
     
@@ -402,7 +402,7 @@ graph TB
     
     subgraph "Allowed Connections"
         A1[Client: Accept HTTPS]
-        A2[API Gateway: Forward requests]
+        A2[API: Forward requests]
     end
     
     subgraph "Blocked"
@@ -477,7 +477,7 @@ graph LR
 
 ```mermaid
 sequenceDiagram
-    participant A as API Gateway
+    participant A as API
     participant S as Search Gateway
     
     Note over A,S: Internal network only
@@ -530,7 +530,7 @@ info, _ := client.Enqueue(
 Asynq provides a web UI for monitoring tasks:
 
 ```go
-// In API gateway
+// In API
 mux.Handle("/asynq", asynqmonitor.NewHandler(monitorOpts))
 ```
 

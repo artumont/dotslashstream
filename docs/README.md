@@ -21,7 +21,7 @@ dotslashstream plays content as it downloads using HLS transcoding. Built for pe
 graph TB
     subgraph "Exposed"
         Web[Web App]
-        API[API Gateway<br/>Go]
+        API[API<br/>Go]
     end
     
     subgraph "Isolated"
@@ -65,7 +65,7 @@ graph TB
 
 | Component | Technology |
 |-----------|------------|
-| API Gateway | Go + net/http |
+| API | Go + net/http |
 | Torrent Worker | Go + anacrolix/torrent |
 | Search Gateway | Go + Colly |
 | Web Frontend | Vue + Vite |

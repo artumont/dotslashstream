@@ -2,7 +2,7 @@
 
 ## Overview
 
-All media storage uses S3-compatible object storage (MinIO). Only API Gateway and Torrent Worker have access.
+All media storage uses S3-compatible object storage (MinIO). Only API and Torrent Worker have access.
 
 ## Bucket Structure
 
@@ -38,7 +38,7 @@ graph TB
 ```mermaid
 graph TB
     subgraph "MinIO Access"
-        API[API Gateway]
+        API[API]
         Worker[Torrent Worker]
         MinIO[MinIO]
     end
@@ -61,7 +61,7 @@ graph TB
 
 | Service | Access | Operations |
 |---------|--------|------------|
-| API Gateway | ✅ | Read metadata, generate presigned URLs |
+| API | ✅ | Read metadata, generate presigned URLs |
 | Torrent Worker | ✅ | Upload segments, download for re-transcode |
 | Search Gateway | ❌ | No access |
 | Web App | ❌ | No direct access (via API only) |
