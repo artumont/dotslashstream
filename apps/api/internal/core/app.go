@@ -106,5 +106,13 @@ func (app *App) Shutdown() {
 		This is to avoid interrupting ongoing transactions that require the services
 	*/
 
+	if err := app.Redis.Close(); err != nil {
+		log.Printf("Redis failed to shutdown gracefully: %v", err)
+	}
+	if err := app.Postgres.Close(); err != nil {
+		log.Printf("Postgres failed to shutdown gracefully: %v", err)
+	}
+	// No need to shutdown MinIO as it wraps the default http.Client
+
 	log.Println("Server shutdown successful")
 }
