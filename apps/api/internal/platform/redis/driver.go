@@ -4,21 +4,23 @@ import (
 	"context"
 	"time"
 
+	"github.com/artumont/dotslashstream/internal/platform"
 	"github.com/hibiken/asynq"
 )
 
-// AsynqClientAdapter adapts hibiken/asynq.Client to our interface
-type AsynqClientAdapter struct {
+type AsynqClientAdapterDriver struct {
 	client *asynq.Client
 }
 
-func NewAsyncqClient(redisAddr string) *AsynqClientAdapter {
-	return &AsynqClientAdapter{
+var _ platform.QueueClient = (*AsynqClientAdapterDriver)(nil)
+
+func New(redisAddr string) *AsynqClientAdapterDriver {
+	return &AsynqClientAdapterDriver{
 		client: asynq.NewClient(asynq.RedisClientOpt{Addr: redisAddr}),
 	}
 }
 
-func (a *AsynqClientAdapter) Enqueue(ctx context.Context, t *Task, delay time.Duration) error {
+func (a *AsynqClientAdapterDriver) Enqueue(ctx context.Context, t *platform.Task, delay time.Duration) error {
 	asynqTask := asynq.NewTask(t.Type, t.Payload)
 
 	var opts []asynq.Option
@@ -30,6 +32,6 @@ func (a *AsynqClientAdapter) Enqueue(ctx context.Context, t *Task, delay time.Du
 	return err
 }
 
-func (a *AsynqClientAdapter) Close() error {
+func (a *AsynqClientAdapterDriver) Close() error {
 	return a.client.Close()
 }

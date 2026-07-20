@@ -10,7 +10,7 @@ dotslashstream is a self-hosted media streaming service that enables streaming w
 ## Technical Context
 
 **Language/Version**: Go 1.22+  
-**Primary Dependencies**: net/http, anacrolix/torrent, minio-go/v7, asynq, sqlc, Colly  
+**Primary Dependencies**: net/http, anacrolix/torrent, minio-go/v7, asynq, bun, Colly, caarlos0/env  
 **Storage**: PostgreSQL (metadata), Redis (queue/cache), MinIO (media files)  
 **Testing**: go test, testify  
 **Target Platform**: Linux server (Docker)  
@@ -41,41 +41,58 @@ specs/001-streaming-platform/
 
 ```text
 .
-├── api/                          # API Gateway service
-│   ├── cmd/
-│   │   └── server/
-│   │       └── main.go
-│   ├── internal/
-│   │   ├── auth/
-│   │   │   ├── jwt.go
-│   │   │   └── middleware.go
-│   │   ├── handlers/
-│   │   │   ├── auth.go
-│   │   │   ├── users.go
-│   │   │   ├── playlists.go
-│   │   │   ├── media.go
-│   │   │   ├── search.go
-│   │   │   └── stream.go
-│   │   ├── models/
-│   │   │   ├── user.go
-│   │   │   ├── media.go
-│   │   │   ├── playlist.go
-│   │   │   └── stream.go
-│   │   ├── repository/
-│   │   │   ├── user.go
-│   │   │   ├── media.go
-│   │   │   └── playlist.go
-│   │   ├── service/
-│   │   │   ├── auth.go
-│   │   │   ├── user.go
-│   │   │   ├── media.go
-│   │   │   └── stream.go
-│   │   └── websocket/
-│   │       └── hub.go
-│   ├── migrations/
-│   └── go.mod
+├── apps/
+│   └── api/                          # API Gateway service
+│       ├── cmd/
+│       │   └── api/
+│       │       └── main.go
+│       ├── internal/
+│       │   ├── app/
+│       │   │   ├── app.go            # wires everything, starts server
+│       │   │   ├── config.go         # env parsing
+│       │   │   └── routes.go         # registers handlers on mux
+│       │   ├── auth/
+│       │   │   ├── handler.go        # HTTP handlers
+│       │   │   ├── service.go        # business logic
+│       │   │   ├── store.go          # UserStore interface
+│       │   │   ├── jwt.go            # token issuer
+│       │   │   └── types.go          # User, Claims
+│       │   ├── media/
+│       │   │   ├── handler.go
+│       │   │   ├── service.go
+│       │   │   ├── store.go          # MediaStore interface
+│       │   │   └── types.go
+│       │   ├── playlist/
+│       │   │   ├── handler.go
+│       │   │   ├── service.go
+│       │   │   ├── store.go          # PlaylistStore interface
+│       │   │   └── types.go
+│       │   ├── stream/
+│       │   │   ├── handler.go
+│       │   │   ├── service.go
+│       │   │   ├── store.go          # StreamStore interface
+│       │   │   └── types.go
+│       │   └── platform/
+│       │       ├── database.go       # DatabaseClient interface
+│       │       ├── queue.go          # QueueClient interface
+│       │       ├── bucket.go         # BucketClient interface
+│       │       ├── postgres/
+│       │       │   ├── driver.go     # implements DatabaseClient
+│       │       │   ├── auth.go       # implements auth.UserStore
+│       │       │   ├── media.go      # implements media.MediaStore
+│       │       │   └── playlist.go   # implements playlist.Store
+│       │       ├── sqlite/
+│       │       │   ├── driver.go     # implements DatabaseClient
+│       │       │   ├── auth.go       # implements auth.UserStore
+│       │       │   ├── media.go      # implements media.MediaStore
+│       │       │   └── playlist.go   # implements playlist.Store
+│       │       ├── redis/
+│       │       │   └── driver.go     # implements QueueClient
+│       │       └── minio/
+│       │           └── driver.go     # implements BucketClient
+│       └── go.mod
 │
-├── worker/                       # Torrent Worker service
+├── worker/                           # Torrent Worker service
 │   ├── cmd/
 │   │   └── worker/
 │   │       └── main.go
@@ -97,7 +114,7 @@ specs/001-streaming-platform/
 │   │       └── progress.go
 │   └── go.mod
 │
-├── search/                       # Search Gateway service
+├── search/                           # Search Gateway service
 │   ├── cmd/
 │   │   └── gateway/
 │   │       └── main.go
@@ -118,7 +135,7 @@ specs/001-streaming-platform/
 │   │   └── indexers.json
 │   └── go.mod
 │
-├── web/                          # Vue.js frontend
+├── web/                              # Vue.js frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── player/
@@ -150,12 +167,12 @@ specs/001-streaming-platform/
 │   ├── index.html
 │   └── package.json
 │
-├── docker-compose.yml           # Service orchestration
-├── .env.example                 # Environment template
-└── docs/                        # Documentation
+├── docker-compose.yml               # Service orchestration
+├── .env.example                      # Environment template
+└── docs/                             # Documentation
 ```
 
-**Structure Decision**: Multi-service architecture with 4 isolated services (api, worker, search, web). Each Go service has independent module with internal packages. Vue.js frontend communicates only with API Gateway.
+**Structure Decision**: Multi-service architecture with 4 isolated services (api, worker, search, web). API uses vertical feature slices (auth, media, playlist, stream) with shared platform adapters for database, queue, and bucket. Feature packages define store interfaces; platform/ provides driver implementations. Swap Postgres ↔ SQLite by changing one line in app.go.
 
 ## Research Topics
 

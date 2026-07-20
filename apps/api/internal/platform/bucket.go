@@ -1,4 +1,4 @@
-package bucket
+package platform
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-type BucketManager interface {
+type BucketClient interface {
 	// Ping checks connectivity to the object storage service.
 	Ping(ctx context.Context) error
 

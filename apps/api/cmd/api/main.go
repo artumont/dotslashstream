@@ -6,15 +6,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/artumont/dotslashstream/internal/core"
+	"github.com/artumont/dotslashstream/internal/app"
 )
 
 func main() {
-	environment, err := core.LoadEnvironment()
+	environment, err := app.LoadConfig()
 	if err != nil {
 		log.Fatalf("Environment loading failed: %v", err)
 	}
-	app := core.NewApp(environment)
+	app := app.NewApp(environment)
 	serverErrors := app.Start()
 
 	shutdownSignals := make(chan os.Signal, 1)

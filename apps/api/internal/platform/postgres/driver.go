@@ -5,16 +5,19 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/artumont/dotslashstream/internal/platform"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 )
 
-type BunPostgresManager struct {
+type BunPostgresDriver struct {
 	client *bun.DB
 }
 
-func NewBunPostgresManager(dsn string) (*BunPostgresManager, error) {
+var _ platform.DatabaseClient = (*BunPostgresDriver)(nil)
+
+func New(dsn string) (*BunPostgresDriver, error) {
 	conn := pgdriver.NewConnector(pgdriver.WithDSN(dsn))
 	sqldb := sql.OpenDB(conn)
 
@@ -24,21 +27,21 @@ func NewBunPostgresManager(dsn string) (*BunPostgresManager, error) {
 
 	bunClient := bun.NewDB(sqldb, pgdialect.New())
 
-	return &BunPostgresManager{client: bunClient}, nil
+	return &BunPostgresDriver{client: bunClient}, nil
 }
 
-func (m *BunPostgresManager) Ping(ctx context.Context) error {
+func (m *BunPostgresDriver) Ping(ctx context.Context) error {
 	return m.client.PingContext(ctx)
 }
 
-func (m *BunPostgresManager) Close() error {
+func (m *BunPostgresDriver) Close() error {
 	return m.client.Close()
 }
 
-func (m *BunPostgresManager) DB() bun.IDB {
+func (m *BunPostgresDriver) DB() bun.IDB {
 	return m.client
 }
 
-func (m *BunPostgresManager) RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error {
+func (m *BunPostgresDriver) RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error {
 	return m.client.RunInTx(ctx, nil, fn)
 }

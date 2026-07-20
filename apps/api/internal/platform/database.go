@@ -1,4 +1,4 @@
-package postgres
+package platform
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type PostgresManager interface {
+type DatabaseClient interface {
 	// Ping checks the health of the Postgres connection pool.
 	Ping(ctx context.Context) error
 

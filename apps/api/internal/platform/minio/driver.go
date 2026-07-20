@@ -10,11 +10,11 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-type MinioBucketManager struct {
+type MinioBucketDriver struct {
 	client *minio.Client
 }
 
-func NewMinioBucketManager(endpoint, accessKey, secretKey string, useSSL bool) (*MinioBucketManager, error) {
+func New(endpoint, accessKey, secretKey string, useSSL bool) (*MinioBucketDriver, error) {
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
@@ -22,19 +22,19 @@ func NewMinioBucketManager(endpoint, accessKey, secretKey string, useSSL bool) (
 	if err != nil {
 		return nil, err
 	}
-	return &MinioBucketManager{client: client}, nil
+	return &MinioBucketDriver{client: client}, nil
 }
 
-func (m *MinioBucketManager) Ping(ctx context.Context) error {
+func (m *MinioBucketDriver) Ping(ctx context.Context) error {
 	_, err := m.client.ListBuckets(ctx)
 	return err
 }
 
-func (m *MinioBucketManager) Client() *minio.Client {
+func (m *MinioBucketDriver) Client() *minio.Client {
 	return m.client
 }
 
-func (m *MinioBucketManager) GenerateUploadURL(
+func (m *MinioBucketDriver) GenerateUploadURL(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,
@@ -43,7 +43,7 @@ func (m *MinioBucketManager) GenerateUploadURL(
 	return m.client.PresignedPutObject(ctx, bucketName, objectPath, expiry)
 }
 
-func (m *MinioBucketManager) GenerateDownloadURL(
+func (m *MinioBucketDriver) GenerateDownloadURL(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,
@@ -52,7 +52,7 @@ func (m *MinioBucketManager) GenerateDownloadURL(
 	return m.client.PresignedGetObject(ctx, bucketName, objectPath, expiry, nil)
 }
 
-func (m *MinioBucketManager) GetObject(
+func (m *MinioBucketDriver) GetObject(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,
@@ -61,7 +61,7 @@ func (m *MinioBucketManager) GetObject(
 	return m.client.GetObject(ctx, bucketName, objectPath, objOptions)
 }
 
-func (m *MinioBucketManager) PutObject(
+func (m *MinioBucketDriver) PutObject(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,
@@ -72,7 +72,7 @@ func (m *MinioBucketManager) PutObject(
 	return m.client.PutObject(ctx, bucketName, objectPath, reader, objectSize, opts)
 }
 
-func (m *MinioBucketManager) RemoveObject(
+func (m *MinioBucketDriver) RemoveObject(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,
@@ -80,7 +80,7 @@ func (m *MinioBucketManager) RemoveObject(
 	return m.client.RemoveObject(ctx, bucketName, objectPath, minio.RemoveObjectOptions{})
 }
 
-func (m *MinioBucketManager) StatObject(
+func (m *MinioBucketDriver) StatObject(
 	ctx context.Context,
 	bucketName string,
 	objectPath string,

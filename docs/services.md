@@ -104,48 +104,71 @@ graph TB
 ### Configuration
 
 ```yaml
-DATABASE_URL: postgresql://user:pass@db:5432/torrentstream
-REDIS_URL: redis://redis:6379
-JWT_SECRET: your-secret-key
-SEARCH_GATEWAY_URL: http://search:8000
+DB_DSN: postgresql://user:pass@db:5432/torrentstream
+REDIS_ADDRESS: redis:6379
+BUCKET_ADDRESS: minio:9000
+BUCKET_KEY_ID: minioadmin
+BUCKET_ACCESS_KEY: minioadmin
+HMAC_SECRET: your-secret-key
+PORT: 8080
+USE_SSL: false
 ```
 
 ### Go Project Structure
 
 ```
-api/
+apps/api/
 ├── cmd/
-│   └── server/
+│   └── api/
 │       └── main.go
 ├── internal/
+│   ├── app/
+│   │   ├── app.go          # wires everything, starts server
+│   │   ├── config.go       # env parsing
+│   │   └── routes.go       # registers handlers on mux
 │   ├── auth/
-│   │   ├── jwt.go
-│   │   └── middleware.go
-│   ├── handlers/
-│   │   ├── auth.go
-│   │   ├── users.go
-│   │   ├── playlists.go
-│   │   ├── media.go
-│   │   └── search.go
-│   ├── models/
-│   │   ├── user.go
-│   │   ├── playlist.go
-│   │   └── media.go
-│   ├── repository/
-│   │   ├── user.go
-│   │   ├── playlist.go
-│   │   └── media.go
-│   ├── service/
-│   │   ├── auth.go
-│   │   ├── user.go
-│   │   ├── playlist.go
-│   │   └── media.go
-│   └── websocket/
-│       └── hub.go
-├── migrations/
-├── go.mod
-└── go.sum
+│   │   ├── handler.go      # HTTP handlers
+│   │   ├── service.go      # business logic
+│   │   ├── store.go        # UserStore interface
+│   │   ├── jwt.go          # token issuer
+│   │   └── types.go        # User, Claims
+│   ├── media/
+│   │   ├── handler.go
+│   │   ├── service.go
+│   │   ├── store.go        # MediaStore interface
+│   │   └── types.go
+│   ├── playlist/
+│   │   ├── handler.go
+│   │   ├── service.go
+│   │   ├── store.go        # PlaylistStore interface
+│   │   └── types.go
+│   ├── stream/
+│   │   ├── handler.go
+│   │   ├── service.go
+│   │   ├── store.go        # StreamStore interface
+│   │   └── types.go
+│   └── platform/
+│       ├── database.go     # DatabaseClient interface
+│       ├── queue.go        # QueueClient interface
+│       ├── bucket.go       # BucketClient interface
+│       ├── postgres/
+│       │   ├── driver.go   # implements DatabaseClient
+│       │   ├── auth.go     # implements auth.UserStore
+│       │   ├── media.go    # implements media.MediaStore
+│       │   └── playlist.go # implements playlist.Store
+│       ├── sqlite/
+│       │   ├── driver.go   # implements DatabaseClient
+│       │   ├── auth.go     # implements auth.UserStore
+│       │   ├── media.go    # implements media.MediaStore
+│       │   └── playlist.go # implements playlist.Store
+│       ├── redis/
+│       │   └── driver.go   # implements QueueClient
+│       └── minio/
+│           └── driver.go   # implements BucketClient
+└── go.mod
 ```
+
+**Structure Decision**: Vertical feature slices (auth, media, playlist, stream) with shared platform adapters. Feature packages define store interfaces; platform/ provides driver implementations. `app/` wires dependencies. Swap Postgres ↔ SQLite by changing one line in app.go.
 
 ---
 

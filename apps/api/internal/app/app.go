@@ -1,4 +1,4 @@
-package core
+package app
 
 import (
 	"context"
@@ -8,24 +8,25 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/artumont/dotslashstream/internal/bucket"
-	"github.com/artumont/dotslashstream/internal/database/postgres"
-	"github.com/artumont/dotslashstream/internal/database/redis"
+	"github.com/artumont/dotslashstream/internal/platform"
+	minioDriver "github.com/artumont/dotslashstream/internal/platform/minio"
+	pgDriver "github.com/artumont/dotslashstream/internal/platform/postgres"
+	redisDriver "github.com/artumont/dotslashstream/internal/platform/redis"
 )
 
 type App struct {
 	InitTime time.Time
 
-	Config   *Environment
-	Redis    redis.QueueClient
-	Postgres postgres.PostgresManager
-	MinIO    bucket.BucketManager
+	Config   *Config
+	Redis    platform.QueueClient
+	Postgres platform.DatabaseClient
+	MinIO    platform.BucketClient
 
 	server *http.Server
 	Router *http.ServeMux
 }
 
-func NewApp(config *Environment) *App {
+func NewApp(config *Config) *App {
 	router := http.NewServeMux()
 
 	server := &http.Server{
@@ -54,15 +55,17 @@ func NewApp(config *Environment) *App {
 // serving without blocking the main execution loop
 func (app *App) Start() <-chan error {
 	log.Println("Initializing server dependencies and routes...")
-
-	// NOTE: Initialize services and routes here
-
-	asynqManager := redis.NewAsyncqClient(app.Config.RedisAddr)
-	pgManager, err := postgres.NewBunPostgresManager(app.Config.DatabaseDSN)
+	asynqManager := redisDriver.New(app.Config.RedisAddr)
+	pgManager, err := pgDriver.New(app.Config.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("Postgres initialization failed: %v", err)
 	}
-	minioManager, err := bucket.NewMinioBucketManager(app.Config.BucketAddr, app.Config.BucketKeyID, app.Config.BucketAccessKey, false)
+	minioManager, err := minioDriver.New(
+		app.Config.BucketAddr,
+		app.Config.BucketKeyID,
+		app.Config.BucketAccessKey,
+		app.Config.UseSSL,
+	)
 	if err != nil {
 		log.Fatalf("Bucket initialization failed: %v", err)
 	}
@@ -70,6 +73,15 @@ func (app *App) Start() <-chan error {
 	app.Redis = asynqManager
 	app.Postgres = pgManager
 	app.MinIO = minioManager
+
+	/*
+		NOTE: Register all handler related stuff AFTER initiating the application
+		services to avoid passing nil interfaces / outdated interfaces
+	*/
+
+	if err := app.RegisterAll(); err != nil {
+		log.Fatalf("Failed to register routes: %v", err)
+	}
 
 	errChannel := make(chan error, 1)
 
