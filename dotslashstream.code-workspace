@@ -1,0 +1,21 @@
+{
+    "settings": [],
+    "folders": [
+        {
+            "path": "apps/api",
+            "name": "api"
+        },
+        {
+            "path": "apps/search-gateway",
+            "name": "search-gateway"
+        },
+        {
+            "path": "apps/torrent-worker",
+            "name": "torrent-worker"
+        },
+        {
+            "path": "apps/web",
+            "name": "web"
+        }
+    ]
+}
