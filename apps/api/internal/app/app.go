@@ -22,8 +22,9 @@ type App struct {
 	Postgres platform.DatabaseClient
 	MinIO    platform.BucketClient
 
-	server *http.Server
-	Router *http.ServeMux
+	server   *http.Server
+	router   *http.ServeMux
+	handlers Handlers
 }
 
 func NewApp(config *Config) *App {
@@ -31,7 +32,7 @@ func NewApp(config *Config) *App {
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", config.Port),
-		Handler:           router,
+		Handler:           requestLogger(router),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -46,8 +47,9 @@ func NewApp(config *Config) *App {
 		Postgres: nil,
 		MinIO:    nil,
 
-		server: server,
-		Router: router,
+		server:   server,
+		router:   router,
+		handlers: Handlers{},
 	}
 }
 
@@ -79,6 +81,9 @@ func (app *App) Start() <-chan error {
 		services to avoid passing nil interfaces / outdated interfaces
 	*/
 
+	if err := app.HandlerInit(); err != nil {
+		log.Fatalf("Failed to init handlers: %v", err)
+	}
 	if err := app.RegisterAll(); err != nil {
 		log.Fatalf("Failed to register routes: %v", err)
 	}

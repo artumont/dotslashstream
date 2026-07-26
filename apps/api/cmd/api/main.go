@@ -7,9 +7,12 @@ import (
 	"syscall"
 
 	"github.com/artumont/dotslashstream/internal/app"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load() // load .env if present, ignore error if missing
+
 	environment, err := app.LoadConfig()
 	if err != nil {
 		log.Fatalf("Environment loading failed: %v", err)
