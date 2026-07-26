@@ -1,0 +1,6 @@
+{
+  "name": "add_first_init_completed",
+  "author": "artumont",
+  "description": "Add first_init_completed flag to track whether the initial admin has been created",
+  "safe": true
+}

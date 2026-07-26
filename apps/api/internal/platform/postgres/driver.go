@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/artumont/dotslashstream/internal/platform"
@@ -26,6 +27,11 @@ func New(dsn string) (*BunPostgresDriver, error) {
 	sqldb.SetConnMaxLifetime(5 * time.Minute)
 
 	bunClient := bun.NewDB(sqldb, pgdialect.New())
+
+	ctx := context.Background()
+	if err := RunMigrations(ctx, bunClient); err != nil {
+		return nil, fmt.Errorf("run migrations: %w", err)
+	}
 
 	return &BunPostgresDriver{client: bunClient}, nil
 }

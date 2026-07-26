@@ -1,0 +1,6 @@
+{
+  "name": "create_users",
+  "author": "artumont",
+  "description": "Create the users table with UUID v7 primary key",
+  "safe": true
+}

@@ -1,0 +1,6 @@
+{
+  "name": "create_invites",
+  "author": "artumont",
+  "description": "Create the invites table for registration tokens",
+  "safe": true
+}

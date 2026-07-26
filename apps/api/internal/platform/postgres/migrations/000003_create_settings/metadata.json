@@ -1,0 +1,6 @@
+{
+  "name": "create_settings",
+  "author": "artumont",
+  "description": "Create the settings singleton table and seed default row",
+  "safe": true
+}
