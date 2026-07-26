@@ -1,0 +1,23 @@
+#:tombi lint.disabled = true
+# Air configuration for hot reload
+# https://github.com/air-verse/air
+
+root = "."
+tmp_dir = ".tmp"
+
+[build]
+cmd = "go build -o ./.tmp/api ./cmd/api"
+entrypoint = "./.tmp/api"
+include_ext = ["go", "toml", "yaml"]
+exclude_dir = [".tmp", "vendor", "node_modules", "tests"]
+delay = 1000
+
+[log]
+time = true
+
+[color]
+build = "yellow"
+runner = "cyan"
+
+[misc]
+clean_on_exit = true
