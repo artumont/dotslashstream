@@ -8,12 +8,10 @@ dotslashstream plays content as it downloads using HLS transcoding. Built for pe
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [architecture.md](./architecture.md) | System design, network isolation, security |
-| [services.md](./services.md) | Service breakdown and responsibilities |
-| [streaming.md](./streaming.md) | Transcoding pipeline and profiles |
-| [storage.md](./storage.md) | Object storage architecture |
+| Section | Description |
+|---------|-------------|
+| [general/](./general/) | Architecture, services, streaming, storage |
+| [api/](./api/) | REST API reference, auth system |
 
 ## Quick Glance
 
