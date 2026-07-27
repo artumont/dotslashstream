@@ -7,6 +7,8 @@ import (
 )
 
 type Config struct {
+	Environment string `env:"ENVIRONMENT" envDefault:"prod"`
+
 	RedisAddr string `env:"REDIS_ADDRESS,required"`
 
 	BucketAddr      string `env:"BUCKET_ADDRESS,required"`

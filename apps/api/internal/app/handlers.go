@@ -24,14 +24,14 @@ func (app *App) HandlerInit() error {
 	userRepo := repo.NewUserRepository(app.Postgres.DB())
 	inviteRepo := repo.NewInviteRepository(app.Postgres.DB())
 	settingsRepo := repo.NewSettingsRepository(app.Postgres.DB())
-	log.Println("  Initialized all repos")
+	log.Println("  Initialized handler repos")
 
 	// ── Handler Service Init ─────────────────────────────────────────────────────
 
 	jwtSvc := auth.NewJWTService(app.Config.HmacSecret)
 	settingsService := settings.NewService(settingsRepo)
 	authService := auth.NewService(jwtSvc, userRepo, inviteRepo)
-	log.Println("  Initialized all handler services")
+	log.Println("  Initialized handler services")
 
 	// ── Handler Init ─────────────────────────────────────────────────────────────
 

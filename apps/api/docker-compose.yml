@@ -11,6 +11,7 @@ services:
       - .:/src
       - go-cache:/go/pkg/mod
     environment:
+      ENVIRONMENT: "dev"
       PORT: 8080
       DB_DSN: postgres://postgres:postgres@database:5432/dotslashstream?sslmode=disable
       REDIS_ADDRESS: redis:6379

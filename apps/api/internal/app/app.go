@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/artumont/dotslashstream/internal/middleware"
 	"github.com/artumont/dotslashstream/internal/platform"
 	asynqDriver "github.com/artumont/dotslashstream/internal/platform/asynq"
 	minioDriver "github.com/artumont/dotslashstream/internal/platform/minio"
@@ -93,7 +92,7 @@ func (app *App) Start() <-chan error {
 	}
 
 	// Wrap router with global middleware (logger, rate limit).
-	app.server.Handler = middleware.Chain(app.router, app.Redis)
+	app.server.Handler = app.Chain(app.router, app.Redis)
 
 	errChannel := make(chan error, 1)
 
