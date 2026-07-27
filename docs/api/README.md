@@ -6,7 +6,7 @@ Go REST API built on `net/http` + Bun ORM. Single external entry point for all c
 
 | Document | Description |
 |----------|-------------|
-| [auth.md](./auth.md) | Authentication, JWT, middleware, invite system |
+| [auth.md](./auth.md) | Authentication, JWT, dependencies, invite system |
 | [settings.md](./settings.md) | Admin-only global application settings |
 | [migrations.md](./migrations.md) | SQL migrations, safety model, production workflow |
 
@@ -31,7 +31,7 @@ apps/api/
 │   │   ├── helpers.go                 # Password hashing, JSON response utils
 │   │   ├── jwt.go                     # JWT sign/verify (HS256)
 │   │   ├── jwt_test.go               # JWT unit tests
-│   │   ├── middleware.go             # AuthRequired, AdminRequired decorators
+│   │   ├── dependency.go             # AuthRequired, AdminRequired dependencies
 │   │   ├── repos.go                   # UserRepo, InviteRepo interfaces
 │   │   ├── service.go                # Auth business logic
 │   │   ├── service_test.go           # Service unit tests (mocked repos)
@@ -52,6 +52,7 @@ apps/api/
 │       ├── bucket.go                  # BucketClient interface
 │       ├── database.go               # DatabaseClient interface
 │       ├── queue.go                   # QueueClient interface
+│       ├── redis.go                   # RedisClient interface (events + rate limiting)
 │       ├── postgres/
 │       ├── driver.go             # Bun + pgdriver, runs migrations on startup
 │       ├── helpers.go            # Embedded migration runner
@@ -73,8 +74,10 @@ apps/api/
 │       │       ├── invite.go          # Invite table schema
 │       │       ├── settings.go        # Global settings singleton schema
 │       │       └── user.go            # User table schema
+│       ├── asynq/
+│       │   └── driver.go             # Asynq queue implementation
 │       ├── redis/
-│       │   └── driver.go             # Asynq + go-redis
+│       │   └── driver.go             # go-redis: streams + rate limiting
 │       └── minio/
 │           └── driver.go             # MinIO S3 client
 ├── tests/                             # Python e2e tests (stdlib only)
@@ -181,6 +184,52 @@ Concrete repos embed the base and add domain-specific queries.
 1. Create struct in `internal/platform/postgres/models/` with `bun:"table:..."` tag
 2. Run `make registry` to regenerate `registry.go`
 3. Table is auto-created on next startup
+
+### Redis Client Interface
+
+`RedisClient` (`internal/platform/redis.go`) abstracts Redis operations. Implementation lives in `internal/platform/redis/driver.go` using `go-redis/v9`.
+
+```go
+type RedisClient interface {
+    Close() error
+    PublishEvent(ctx context.Context, stream string, event Event) (string, error)
+    Allow(ctx context.Context, key string, limit int, window time.Duration) (bool, error)
+    IncrAndExpire(ctx context.Context, key string, ttl time.Duration) (int64, error)
+}
+```
+
+**Rate Limiting**
+
+Sliding window rate limiter backed by sorted sets:
+
+- `Allow` — checks if a key is within the limit for the given window. Evicts expired entries, then checks count.
+- `IncrAndExpire` — adds a timestamp entry to the sorted set, sets TTL on first insert, returns current count.
+
+Usage pattern:
+
+```go
+// Check if user is within rate limit
+allowed, err := redis.Allow(ctx, "rate:user:123", 100, 1*time.Minute)
+if !allowed {
+    http.Error(w, "rate limited", http.StatusTooManyRequests)
+    return
+}
+
+// Record the request
+count, err := redis.IncrAndExpire(ctx, "rate:user:123", 1*time.Minute)
+```
+
+**Event Publishing**
+
+Redis Streams for real-time event delivery (used for WebSocket progress updates):
+
+```go
+type Event interface {
+    Serialize() ([]byte, error)
+}
+
+id, err := redis.PublishEvent(ctx, "stream:progress", progressEvent)
+```
 
 ## Testing
 

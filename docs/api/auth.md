@@ -10,7 +10,7 @@ internal/auth/
 ├── helpers.go       # Password hashing, writeJSON, writeError
 ├── jwt.go           # JWT sign/verify (HS256)
 ├── jwt_test.go      # JWT unit tests
-├── middleware.go     # AuthRequired, AdminRequired decorators
+├── dependency.go     # AuthRequired, AdminRequired dependencies
 ├── repos.go         # UserRepo, InviteRepo interfaces
 ├── service.go       # Business logic
 ├── service_test.go  # Service unit tests (mocked repos)
@@ -28,8 +28,8 @@ internal/auth/
 | `POST` | `/auth/change-password` | 🔒 | Update password (requires old) |
 | `POST` | `/auth/invite/generate` | 🔒👑 | Create invite link (admin only) |
 
-🔒 = `AuthRequired` middleware — valid Bearer token required
-👑 = `AdminRequired` middleware — `is_admin` must be true
+🔒 = `AuthRequired` dependency — valid Bearer token required
+👑 = `AdminRequired` dependency — `is_admin` must be true
 
 ## Init Protocol
 
@@ -64,9 +64,9 @@ internal/auth/
 - `false`: registration without `invite` returns `403`
 - Provided invite tokens are always verified and consumed after successful registration
 
-## Middleware
+## Dependencies
 
-Route protection via decorator chaining at registration time:
+Route protection via dependency chaining at registration time:
 
 ```go
 // Public
@@ -82,7 +82,7 @@ mux.Handle("POST /auth/invite/generate",
     AuthRequired(h.svc, AdminRequired(http.HandlerFunc(h.generateInvite))))
 ```
 
-Middleware stores user in context. Handlers retrieve via `UserFromContext(r)`.
+Dependencies store user in context. Handlers retrieve via `UserFromContext(r)`.
 
 ## Request / Response Examples
 
@@ -235,7 +235,7 @@ sequenceDiagram
 | `missing or malformed authorization header` | 401 | No Bearer token |
 | `token expired` | 401 | Access token TTL exceeded |
 | `invalid token` | 401 | Malformed or wrong-secret token |
-| `authentication required` | 401 | Middleware: no user in context |
+| `authentication required` | 401 | Dependency: no user in context |
 | `admin access required` | 403 | User `is_admin` is false |
 | `invalid username or password` | 401 | Bad credentials |
 | `username or email already taken` | 409 | Duplicate on register |

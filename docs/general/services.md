@@ -40,7 +40,7 @@ graph TB
 
 **Purpose:** Single entry point for all client communication.
 
-**Tech:** Go + net/http + sqlc + go-redis
+**Tech:** Go + net/http + Bun ORM + go-redis
 
 ### Responsibilities
 
