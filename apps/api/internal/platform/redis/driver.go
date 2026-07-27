@@ -20,6 +20,10 @@ func New(redisAddr string) *RedisDriver {
 	}
 }
 
+func (r *RedisDriver) Close() error {
+	return r.rdb.Close()
+}
+
 func (r *RedisDriver) PublishEvent(ctx context.Context, stream string, event platform.Event) (string, error) {
 	bytes, err := event.Serialize()
 	if err != nil {

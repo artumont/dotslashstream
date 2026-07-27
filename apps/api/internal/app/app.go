@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/artumont/dotslashstream/internal/platform"
+	asynqDriver "github.com/artumont/dotslashstream/internal/platform/asynq"
 	minioDriver "github.com/artumont/dotslashstream/internal/platform/minio"
 	pgDriver "github.com/artumont/dotslashstream/internal/platform/postgres"
 	redisDriver "github.com/artumont/dotslashstream/internal/platform/redis"
@@ -18,7 +19,8 @@ type App struct {
 	InitTime time.Time
 
 	Config   *Config
-	Redis    platform.QueueClient
+	Redis    platform.RedisClient
+	Queue    platform.QueueClient
 	Postgres platform.DatabaseClient
 	MinIO    platform.BucketClient
 
@@ -57,7 +59,8 @@ func NewApp(config *Config) *App {
 // serving without blocking the main execution loop
 func (app *App) Start() <-chan error {
 	log.Println("Initializing server dependencies and routes...")
-	asynqManager := redisDriver.New(app.Config.RedisAddr)
+	redisManager := redisDriver.New(app.Config.RedisAddr)
+	asynqManager := asynqDriver.New(app.Config.RedisAddr)
 	pgManager, err := pgDriver.New(app.Config.DatabaseDSN)
 	if err != nil {
 		log.Fatalf("Postgres initialization failed: %v", err)
@@ -72,7 +75,8 @@ func (app *App) Start() <-chan error {
 		log.Fatalf("Bucket initialization failed: %v", err)
 	}
 
-	app.Redis = asynqManager
+	app.Redis = redisManager
+	app.Queue = asynqManager
 	app.Postgres = pgManager
 	app.MinIO = minioManager
 
