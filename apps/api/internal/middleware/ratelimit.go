@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log"
+	"net"
 	"net/http"
 	"time"
 
@@ -43,10 +44,14 @@ func RateLimit(redis platform.RedisClient, limit int, window time.Duration) func
 
 // rateLimitKey builds a rate-limit key from the request. If a user is
 // present in context (AuthRequired ran first), the key is the user ID;
-// otherwise it falls back to RemoteAddr.
+// otherwise it falls back to the client IP (port stripped).
 func rateLimitKey(r *http.Request) string {
 	if user := auth.UserFromContext(r); user != nil {
 		return "user:" + user.ID.String()
 	}
-	return "ip:" + r.RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	return "ip:" + host
 }
