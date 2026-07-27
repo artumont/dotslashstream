@@ -1,0 +1,12 @@
+# E2E Test Blacklist
+# Tests matching these entries are skipped during `make test-e2e`.
+#
+# Prefixes:
+#   section:  Skip all tests in a section (e.g. section:Rate Limiting)
+#   test:     Skip an individual test by name (e.g. test:01_drain_and_verify_429)
+#   file:     Skip an entire test file (e.g. file:middleware/test_ratelimit.py)
+#
+# Lines starting with # are comments. Blank lines are ignored.
+
+# Example: skip rate-limit tests in full suite (run separately)
+section:Rate Limiting

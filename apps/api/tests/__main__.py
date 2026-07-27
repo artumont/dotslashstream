@@ -4,10 +4,16 @@
 Zero dependencies — Python stdlib only.
 
 Usage:
-    python3 tests/main.py                          # all tests
-    python3 tests/main.py test_register.py         # one file
-    python3 tests/main.py test_login.py::test_valid # one function
-    API_URL=http://localhost:9090 python3 tests/main.py
+    python3 -m tests                              # all tests
+    python3 -m tests sections                     # list available sections
+    python3 -m tests -s Login                     # run a section
+    python3 -m tests -s Login -s Registration     # run multiple sections
+    python3 -m tests -t 2                         # 2s cooldown between sections
+    python3 -m tests -s "Rate Limiting" -t 3      # section + cooldown
+    python3 -m tests --no-blacklist               # ignore blacklist
+    python3 -m tests auth/test_login.py           # one file
+    python3 -m tests auth::test_login_success     # one function
+    API_URL=http://localhost:9090 python3 -m tests
 """
 
 import os
@@ -19,9 +25,8 @@ PROJECT_ROOT = os.path.dirname(
 )
 sys.path.insert(0, PROJECT_ROOT)
 
-from tests.runner import run  # noqa: E402
+from tests.runner import _cli  # noqa: E402
 
 
 if __name__ == "__main__":
-    targets = sys.argv[1:] if len(sys.argv) > 1 else None
-    sys.exit(run(targets))
+    sys.exit(_cli())
