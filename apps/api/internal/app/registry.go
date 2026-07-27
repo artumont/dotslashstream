@@ -10,9 +10,9 @@ type RouteRegistrar interface {
 	RegisterRoutes(mux *http.ServeMux)
 }
 
-// RegisterAll iterates over every previously registered RouteRegistrar and
+// RegisterAllHandlers iterates over every previously registered RouteRegistrar and
 // wires its routes into the provided http.ServeMux.
-func (app *App) RegisterAll() error {
+func (app *App) RegisterAllHandlers() error {
 	log.Println("Registering routes...")
 
 	/*

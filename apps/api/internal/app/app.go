@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/artumont/dotslashstream/internal/middleware"
 	"github.com/artumont/dotslashstream/internal/platform"
 	asynqDriver "github.com/artumont/dotslashstream/internal/platform/asynq"
 	minioDriver "github.com/artumont/dotslashstream/internal/platform/minio"
@@ -34,7 +35,6 @@ func NewApp(config *Config) *App {
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", config.Port),
-		Handler:           requestLogger(router),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -88,9 +88,12 @@ func (app *App) Start() <-chan error {
 	if err := app.HandlerInit(); err != nil {
 		log.Fatalf("Failed to init handlers: %v", err)
 	}
-	if err := app.RegisterAll(); err != nil {
+	if err := app.RegisterAllHandlers(); err != nil {
 		log.Fatalf("Failed to register routes: %v", err)
 	}
+
+	// Wrap router with global middleware (logger, rate limit).
+	app.server.Handler = middleware.Chain(app.router, app.Redis)
 
 	errChannel := make(chan error, 1)
 
